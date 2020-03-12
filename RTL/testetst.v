@@ -12,6 +12,7 @@
 //Outputs:
 //updated_pc: Next PC used for the next clock cycle. 
 //current_pc: PC that is currently processed. 
+//change it
 
 
 module pc#(
