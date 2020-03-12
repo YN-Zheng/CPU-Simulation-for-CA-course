@@ -12,7 +12,7 @@
 //Outputs:
 //updated_pc: Next PC used for the next clock cycle. 
 //current_pc: PC that is currently processed. 
-
+//ADD a new line 
 
 module pc#(
    parameter integer DATA_W = 16
