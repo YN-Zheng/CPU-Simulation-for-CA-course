@@ -22,6 +22,7 @@ module alu_control(
    parameter [3:0] SRL_OP        = 4'd4;
    parameter [3:0] SUB_OP        = 4'd5;
    parameter [3:0] SLT_OP        = 4'd7;
+   parameter [3:0] MULT_OP       = 4'd8;
    parameter [3:0] NOR_OP        = 4'd12; 
    //The decoding of the instruction funtion field into the desired
    //alu operation can be found in Figure 4.12 of the Patterson Book,
@@ -34,6 +35,7 @@ module alu_control(
    parameter [5:0] FUNC_SLT      = 6'b101010;
    parameter [5:0] FUNC_SLL      = 6'b000000;
    parameter [5:0] FUNC_SRL      = 6'b000010;
+   parameter [5:0] FUNC_MULT     = 6'b011000;
 
 	reg [3:0] rtype_op;
 
@@ -47,6 +49,7 @@ module alu_control(
 		   FUNC_SLT	:  rtype_op = SLT_OP;
 		   FUNC_SLL	:  rtype_op = SLL_OP;
 		   FUNC_SRL	:  rtype_op = SRL_OP;
+		   FUNC_MULT    :  rtype_op = MULT_OP;
 			default:    rtype_op = 4'd0;
 		endcase
 	end
