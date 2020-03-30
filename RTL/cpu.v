@@ -44,7 +44,7 @@ wire [       3:0] alu_control;
 wire              reg_dst,branch,branch_EX,branch_MEM,mem_read,mem_read_EX,mem_read_MEM,mem_2_reg,mem_2_reg_EX,mem_2_reg_MEM,mem_2_reg_WB,
                   mem_write,mem_write_EX,mem_write_MEM,alu_src, alu_src_EX,reg_write,reg_write_EX,reg_write_MEM,reg_write_WB, jump,jump_EX,jump_MEM;
 wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB;
-wire [      31:0] regfile_wdata, dram_data,dram_data_WB,alu_out,alu_out_MEM,alu_out_WB,
+wire [      31:0] regfile_wdata_WB, dram_data,dram_data_WB,alu_out,alu_out_MEM,alu_out_WB,
                   regfile_data_1,regfile_data_1_EX,regfile_data_2,regfile_data_2_EX,regfile_data_2_MEM,
                   alu_operand_2;
 /*
@@ -99,6 +99,15 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) updated_pc_pipe_ID_EX(
 .din (updated_pc_ID),
 .dout (updated_pc_EX)
 );
+
+// RS_EX :updated_pc_EX[25-21]
+// RT_EX :updated_pc_EX[20-16]
+
+// RD_MEM: regfile_waddr_MEM
+// RD_MEM: regfile_waddr_WB
+
+
+
 //
 
 sram #(
@@ -427,7 +436,7 @@ register_file #(
    //.raddr_1  (instruction6_ID),
    //.raddr_2  (instruction5_ID),
    .waddr    (regfile_waddr_WB  ),
-   .wdata    (regfile_wdata     ),
+   .wdata    (regfile_wdata_WB     ),
    .rdata_1  (regfile_data_1    ),
    .rdata_2  (regfile_data_2    )
 );
@@ -540,7 +549,7 @@ mux_2 #(
    .input_a  (dram_data_WB    ),
    .input_b  (alu_out_WB      ),
    .select_a (mem_2_reg_WB     ),
-   .mux_out  (regfile_wdata)
+   .mux_out  (regfile_wdata_WB)
 );
 
 
