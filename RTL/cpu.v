@@ -36,23 +36,18 @@ module cpu(
 
    );
    
-   
-	output reg	,
-	output reg	[1:0] forwarding_rs,
-	output reg	[1:0] forwarding_rt
-   
 
 wire              zero_flag;
 wire [      31:0] branch_pc,branch_pc_MEM,updated_pc,updated_pc_ID,updated_pc_EX,current_pc,jump_pc,jump_pc_MEM,
                   instruction,instruction_ID,instruction_EX;
 wire [       1:0] alu_op,alu_op_EX, forwarding_rs,forwarding_rt;
-wire [       3:0] alu_control, pipline_en,
+wire [       3:0] alu_control, pipline_en；
 wire              reg_dst,branch,branch_EX,branch_MEM,mem_read,mem_read_EX,mem_read_MEM,mem_2_reg,mem_2_reg_EX,mem_2_reg_MEM,mem_2_reg_WB,
                   mem_write,mem_write_EX,mem_write_MEM,alu_src, alu_src_EX,reg_write,reg_write_EX,reg_write_MEM,reg_write_WB, jump,jump_EX,jump_MEM;
 wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB;
 wire [      31:0] regfile_wdata_WB, dram_data,dram_data_WB,alu_out,alu_out_MEM,alu_out_WB,
                   regfile_data_1,regfile_data_1_EX,regfile_data_2,regfile_data_2_EX,regfile_data_2_MEM,
-                  alu_operand_2, forwarding_rs_out, forwarding_rt_out
+                  alu_operand_2, forwarding_rs_out, forwarding_rt_out；
 /*
 wire [	    15:0] instruction1;
 wire [       5:0] instruction2, instruction3;
