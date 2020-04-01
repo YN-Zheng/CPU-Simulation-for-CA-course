@@ -91,6 +91,7 @@ module forwarding_unit#() (
 	input wire 			reg_write_WB,
 	input wire			mem_2_reg_MEM,
 	input wire 			mem_2_reg_WB,
+        input wire 			reg_dst_EX,    //==1, rt is the writed reg, only consider rs
 
 
 	output reg	[3:0] pipline_en,
@@ -98,10 +99,10 @@ module forwarding_unit#() (
 	output reg	[1:0] forwarding_rt
 );
 
-   parameter integer ORIGIN			= 2'b0;
-   parameter integer FROM_WB		= 2'b1;
-   parameter integer FROM_MEM		= 2'b2;
-   
+   parameter integer ORIGIN		= 2'b00;
+   parameter integer FROM_WB		= 2'b01;
+   parameter integer FROM_MEM		= 2'b10;
+   parameter [1:0] R_TYPE_OPCODE  = 2'd2;
  
  /*  
    if(reg_write_WB == 1) // WB	//regfile_wdata_WB
@@ -127,39 +128,36 @@ module forwarding_unit#() (
 	}
 	*/
 	
-always@(posedge clk)begin
+always@(*)begin
 
-   if(reg_write_WB==1 && rs_EX==regfile_waddr_WB)begin
-      forwarding_rs <= 2'b1;
+   if(reg_write_WB==1 && rs_EX==regfile_waddr_WB && reg_dst_EX ==1)begin
+      forwarding_rs = 2'b01;
       end
    else begin
-	  forwarding_rs <= 2'b0;
-	  end
+      forwarding_rs = 2'b00;
+      end
 	  	
    if(reg_write_WB == 1 && rt_EX == regfile_waddr_WB) begin
-      forwarding_rt <= 2'b1;
+      forwarding_rt = 2'b01;
       end
    else begin
-      forwarding_rs <= 2'b0;
-	  end
+      forwarding_rt = 2'b00;
+      end
 	  
-   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rs_EX == regfile_waddr_MEM) begin
-      forwarding_rs <= 2'b2;
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rs_EX == regfile_waddr_MEM && reg_dst_EX == 1) begin
+      forwarding_rs = 2'b10;
       end
 
-   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rt_EX == regfile_waddr_MEM) begin
-      forwarding_rt <= 2'b2;
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rt_EX == regfile_waddr_MEM ) begin
+      forwarding_rt = 2'b10;
       end
 
    if(reg_write_MEM == 1 && mem_2_reg_MEM == 1) begin
-      pipline_en <= 4'b1000;
+      pipline_en = 4'b1000;
       end
    else begin
-      pipline_en <= 4'b1111;
+      pipline_en = 4'b1111;
       end
-
-      
-
 end
 
 

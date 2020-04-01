@@ -189,7 +189,7 @@ task test_mult_2;
       $display("%c[0m",27);
    end else begin
       $display("%c[1;31m",27);
-      $display("Error in Mult function");
+      $display("Error in Mult2 function");
       $display("%c[0m",27);
    end   
 endtask
