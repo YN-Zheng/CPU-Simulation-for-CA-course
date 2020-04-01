@@ -80,8 +80,9 @@ if(reg_write_MEM == 1)   // MEM //alu_out_MEM
 // RD_wb: regfile_waddr_WB
 
 /******************************start working*********************************/
-module sram#() (
+module forwarding_unit#() (
 	input wire		      clk,
+
 	input wire		[4:0] rs_EX,
 	input wire		[4:0] rt_EX,
 	input wire		[4:0] regfile_waddr_WB,
@@ -100,7 +101,66 @@ module sram#() (
    parameter integer ORIGIN			= 2'b0;
    parameter integer FROM_WB		= 2'b1;
    parameter integer FROM_MEM		= 2'b2;
+   
+ 
+ /*  
+   if(reg_write_WB == 1) // WB	//regfile_wdata_WB
+	{
+		if(rs_EX == regfile_waddr_WB)
+			forwarding_rs = 1;
+		if(rt_EX == regfile_waddr_WB)
+			forwarding_rt = 1;
+	}
+	if(reg_write_MEM == 1)   // MEM //alu_out_MEM
+	{
+		if(mem_2_reg_MEM == 0)   // AI
+		{
+			if(rs_EX == regfile_waddr_MEM)
+				forwarding_rs = 2;
+			if(rt_EX == regfile_waddr_MEM)
+				forwarding_rt = 2;
+		}
+		else				// LW
+		{
+			//stall the pipline
+		}	
+	}
+	*/
+	
+always@(posedge clk)begin
 
+   if(reg_write_WB==1 && rs_EX==regfile_waddr_WB)begin
+      forwarding_rs <= 2'b1;
+      end
+   else begin
+	  forwarding_rs <= 2'b0;
+	  end
+	  	
+   if(reg_write_WB == 1 && rt_EX == regfile_waddr_WB) begin
+      forwarding_rt <= 2'b1;
+      end
+   else begin
+      forwarding_rs <= 2'b0;
+	  end
+	  
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rs_EX == regfile_waddr_MEM) begin
+      forwarding_rs <= 2'b2;
+      end
+
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rt_EX == regfile_waddr_MEM) begin
+      forwarding_rt <= 2'b2;
+      end
+
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 1) begin
+      pipline_en <= 4'b1000;
+      end
+   else begin
+      pipline_en <= 4'b1111;
+      end
+
+      
+
+end
 
 
 	
