@@ -23,7 +23,7 @@ if(reg_write_MEM == 1)   // MEM //alu_out_MEM
 	}
 	else				// LW
 	{
-		//stall the pipline
+		//stall the pipeline
 	}	
 }
 ********************************************/
@@ -69,7 +69,7 @@ if(reg_write_MEM == 1)   // MEM //alu_out_MEM
 		// 1: choose data_to_reg_WB
 		// 2: choose alu_MEM
 	
-	//pipline_en[3:0]: 	if stall-----1000 (IF/ID/MEM = 0, WB = 1)
+	//pipeline_en[3:0]: 	if stall-----1000 (IF/ID/MEM = 0, WB = 1)
 					//	else-----1111
 
 
@@ -92,9 +92,9 @@ module forwarding_unit#() (
 	input wire			mem_2_reg_MEM,
 	input wire 			mem_2_reg_WB,
         input wire 			reg_dst_EX,    //==1, rt is the writed reg, only consider rs
+      	input wire 			enable,
 
-
-	output reg	[3:0] pipline_en,
+	output reg	[4:0] pipeline_en,
 	output reg	[1:0] forwarding_rs,
 	output reg	[1:0] forwarding_rt
 );
@@ -123,7 +123,7 @@ module forwarding_unit#() (
 		}
 		else				// LW
 		{
-			//stall the pipline
+			//stall the pipeline
 		}	
 	}
 	*/
@@ -152,11 +152,15 @@ always@(*)begin
       forwarding_rt = 2'b10;
       end
 
-   if(reg_write_MEM == 1 && mem_2_reg_MEM == 1) begin
-      pipline_en = 4'b1000;
+
+   if(enable == 0) begin
+      pipeline_en = 5'b00000;
+      end
+   else if(reg_write_MEM == 1 && mem_2_reg_MEM == 1) begin
+      pipeline_en = 5'b10000;
       end
    else begin
-      pipline_en = 4'b1111;
+      pipeline_en = 5'b11111;
       end
 end
 

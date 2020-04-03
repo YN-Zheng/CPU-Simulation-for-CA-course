@@ -37,14 +37,14 @@ module cpu(
    );
    
 
-wire              zero_flag;
+wire              zero_flag, enable_IF,enable_IF_ID, enable_ID_EX, enable_EX_MEM, enable_MEM_WB;
 wire [      31:0] branch_pc,branch_pc_MEM,updated_pc,updated_pc_ID,updated_pc_EX,current_pc,jump_pc,jump_pc_MEM,
                   instruction,instruction_ID,instruction_EX;
 wire [       1:0] alu_op,alu_op_EX, forwarding_rs,forwarding_rt;
-wire [       3:0] alu_control, pipline_en;
+wire [       3:0] alu_control;
 wire              reg_dst,reg_dst_EX,branch,branch_EX,branch_MEM,mem_read,mem_read_EX,mem_read_MEM,mem_2_reg,mem_2_reg_EX,mem_2_reg_MEM,mem_2_reg_WB,
                   mem_write,mem_write_EX,mem_write_MEM,alu_src, alu_src_EX,reg_write,reg_write_EX,reg_write_MEM,reg_write_WB, jump,jump_EX,jump_MEM;
-wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB;
+wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB, pipeline_en;
 wire [      31:0] regfile_wdata_WB, dram_data,dram_data_WB,alu_out,alu_out_MEM,alu_out_WB,
                   regfile_data_1,regfile_data_1_EX,regfile_data_2,regfile_data_2_EX,regfile_data_2_MEM,
                   alu_operand_2, forwarding_rs_out, forwarding_rt_out;
@@ -80,17 +80,22 @@ pc #(
    .branch    (branch_MEM    ),
    .jump      (jump_MEM      ),
    .current_pc(current_pc),
-   .enable    (enable    ),
+   .enable    (enable_IF   ),
    .updated_pc(updated_pc)
 );
 
-assign enable = pipline_en[0] && pipline_en[1] && pipline_en[2] && pipline_en[3];
+assign enable_IF = 	pipeline_en[0];
+assign enable_IF_ID = 	pipeline_en[1];
+assign enable_ID_EX = 	pipeline_en[2];
+assign enable_EX_MEM = 	pipelein_en[3];
+assign enable_MEM_WB = 	pipelein_en[4];
+
 
 //pipeline updated_pc
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) updated_pc_pipe_IF_ID(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_IF_ID),
 .din (updated_pc),
 .dout (updated_pc_ID)
 );
@@ -98,7 +103,7 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) updated_pc_pipe_IF_ID(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) updated_pc_pipe_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (updated_pc_ID),
 .dout (updated_pc_EX)
 );
@@ -134,7 +139,7 @@ sram #(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0) ) updated_instruction_pipe_IF_ID(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_IF_ID),
 .din (instruction),
 .dout (instruction_ID)
 );
@@ -142,7 +147,7 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0) ) updated_instruction_pipe_IF_ID(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) updated_instruction_pipe_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (instruction_ID),
 .dout (instruction_EX)
 );
@@ -251,7 +256,7 @@ control_unit control_unit(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) branch_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (branch),
 .dout (branch_EX )
 );
@@ -259,7 +264,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) branch_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) branch_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (branch_EX),
 .dout (branch_MEM )
 );
@@ -270,7 +275,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) branch_EX_MEM(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_read_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (mem_read),
 .dout (mem_read_EX )
 );
@@ -278,7 +283,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_read_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_read_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (mem_read_EX),
 .dout (mem_read_MEM )
 );
@@ -289,7 +294,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_read_EX_MEM(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (mem_2_reg),
 .dout (mem_2_reg_EX )
 );
@@ -297,7 +302,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (mem_2_reg_EX),
 .dout (mem_2_reg_MEM )
 );
@@ -305,7 +310,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_EX_MEM(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_MEM_WB(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_MEM_WB),
 .din (mem_2_reg_MEM),
 .dout (mem_2_reg_WB )
 );
@@ -315,7 +320,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_MEM_WB(
 reg_arstn_en#(.DATA_W(2), .PRESET_VAL('b0)) alu_op_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (alu_op),
 .dout (alu_op_EX )
 );
@@ -325,7 +330,7 @@ reg_arstn_en#(.DATA_W(2), .PRESET_VAL('b0)) alu_op_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_write_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (mem_write),
 .dout (mem_write_EX )
 );
@@ -333,7 +338,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_write_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_write_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (mem_write_EX),
 .dout (mem_write_MEM )
 );
@@ -342,7 +347,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_write_EX_MEM(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) alu_src_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (alu_src),
 .dout (alu_src_EX )
 );
@@ -351,7 +356,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) alu_src_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (reg_write),
 .dout (reg_write_EX )
 );
@@ -359,7 +364,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (reg_write_EX),
 .dout (reg_write_MEM )
 );
@@ -367,7 +372,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_EX_MEM(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_MEM_WB(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_MEM_WB),
 .din (reg_write_MEM),
 .dout (reg_write_WB )
 );
@@ -377,7 +382,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_MEM_WB(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) jump_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (jump),
 .dout (jump_EX )
 );
@@ -385,7 +390,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) jump_ID_EX(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) jump_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (jump_EX),
 .dout (jump_MEM )
 );
@@ -406,7 +411,7 @@ mux_2 #(
 reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_dst_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (reg_dst),
 .dout (reg_dst_EX )
 );
@@ -415,7 +420,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_dst_ID_EX(
 reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (regfile_waddr),
 .dout (regfile_waddr_EX)
 );
@@ -424,7 +429,7 @@ reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_ID_EX(
 reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (regfile_waddr_EX),
 .dout (regfile_waddr_MEM )
 );
@@ -432,7 +437,7 @@ reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_EX_MEM(
 reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_MEM_WB(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_MEM_WB),
 .din (regfile_waddr_MEM),
 .dout (regfile_waddr_WB )
 );
@@ -458,7 +463,7 @@ register_file #(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) regfile_data_1_pipe_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (regfile_data_1),
 .dout (regfile_data_1_EX )
 );
@@ -466,7 +471,7 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) regfile_data_1_pipe_ID_EX(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) regfile_data_2_pipe_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_ID_EX),
 .din (regfile_data_2),
 .dout (regfile_data_2_EX )
 );
@@ -474,7 +479,7 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) regfile_data_2_pipe_ID_EX(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) regfile_data_2_pipe_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (regfile_data_2_EX),
 .dout (regfile_data_2_MEM )
 );
@@ -516,7 +521,7 @@ alu#(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) alu_out_pipe_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (alu_out),
 .dout (alu_out_MEM )
 );
@@ -524,7 +529,7 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) alu_out_pipe_EX_MEM(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) alu_out_pipe_MEM_WB(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_MEM_WB),
 .din (alu_out_MEM),
 .dout (alu_out_WB )
 );
@@ -551,7 +556,7 @@ sram #(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) rdata_pipe_MEM_WB(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_MEM_WB),
 .din (dram_data),
 .dout (dram_data_WB )
 );
@@ -582,7 +587,7 @@ branch_unit#(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) branch_pc_pipe_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (branch_pc),
 .dout (branch_pc_MEM )
 );
@@ -591,7 +596,7 @@ reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) branch_pc_pipe_EX_MEM(
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) jump_pc_pipe_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
-.en (enable),
+.en (enable_EX_MEM),
 .din (jump_pc),
 .dout (jump_pc_MEM )
 );
@@ -629,7 +634,8 @@ forwarding_unit #(
    .mem_2_reg_MEM	(mem_2_reg_MEM),
    .mem_2_reg_WB	(mem_2_reg_MEM),
    .reg_dst_EX  	(reg_dst_EX),
-   .pipline_en (pipline_en),
+   .enable		(enable),
+   .pipeline_en (pipeline_en),
    .forwarding_rs(forwarding_rs),
    .forwarding_rt(forwarding_rt)
 );
