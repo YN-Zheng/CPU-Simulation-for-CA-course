@@ -91,19 +91,20 @@ module forwarding_unit#() (
 	input wire 			reg_write_WB,
 	input wire			mem_2_reg_MEM,
 	input wire 			mem_2_reg_WB,
-        input wire 			reg_dst_EX,    //==1, rt is the writed reg, only consider rs
+        input wire 			reg_dst_EX,    //==0, rt is the writed reg, only consider rs  /dst==1,consider rt as well
       	input wire 			enable,
 
 	output reg	[4:0] pipeline_en,
 	output reg	[1:0] forwarding_rs,
-	output reg	[1:0] forwarding_rt
+	output reg	[1:0] forwarding_rt,
+	output reg 		stalling    // ==1, add NOP in mem_2_reg and reg_write 
 );
 
    parameter integer ORIGIN		= 2'b00;
    parameter integer FROM_WB		= 2'b01;
    parameter integer FROM_MEM		= 2'b10;
    parameter [1:0] R_TYPE_OPCODE  = 2'd2;
- 
+
  /*  
    if(reg_write_WB == 1) // WB	//regfile_wdata_WB
 	{
@@ -130,37 +131,43 @@ module forwarding_unit#() (
 	
 always@(*)begin
 
-   if(reg_write_WB==1 && rs_EX==regfile_waddr_WB && reg_dst_EX ==1)begin
+   if(reg_write_WB==1 && rs_EX==regfile_waddr_WB)begin
       forwarding_rs = 2'b01;
       end
    else begin
       forwarding_rs = 2'b00;
       end
 	  	
-   if(reg_write_WB == 1 && rt_EX == regfile_waddr_WB) begin
+   if(reg_write_WB == 1 && rt_EX == regfile_waddr_WB  && reg_dst_EX ==1) begin
       forwarding_rt = 2'b01;
       end
    else begin
       forwarding_rt = 2'b00;
       end
 	  
-   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rs_EX == regfile_waddr_MEM && reg_dst_EX == 1) begin
+   // MEM could overwrite WB
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rs_EX == regfile_waddr_MEM) begin
       forwarding_rs = 2'b10;
       end
 
-   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rt_EX == regfile_waddr_MEM ) begin
+   if(reg_write_MEM == 1 && mem_2_reg_MEM == 0 && rt_EX == regfile_waddr_MEM && reg_dst_EX == 1) begin
       forwarding_rt = 2'b10;
       end
+end
 
 
+always@(*) begin
    if(enable == 0) begin
       pipeline_en = 5'b00000;
+      stalling = 1'b0;
       end
-   else if(reg_write_MEM == 1 && mem_2_reg_MEM == 1) begin
-      pipeline_en = 5'b10000;
+   else if(reg_write_MEM == 1 && mem_2_reg_MEM == 1 && (rs_EX == regfile_waddr_MEM || rt_EX == regfile_waddr_MEM)) begin
+      pipeline_en = 5'b11100;
+      stalling = 1'b1;
       end
    else begin
       pipeline_en = 5'b11111;
+      stalling = 1'b0;
       end
 end
 
