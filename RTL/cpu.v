@@ -44,7 +44,7 @@ wire [       1:0] alu_op,alu_op_EX, forwarding_rs,forwarding_rt;
 wire [       3:0] alu_control;
 wire              reg_dst,reg_dst_EX,branch,branch_EX,branch_MEM,mem_read,mem_read_EX,mem_read_MEM,mem_2_reg,mem_2_reg_EX,mem_2_reg_MEM_REAL,mem_2_reg_MEM,mem_2_reg_WB,
                   mem_write,mem_write_EX,mem_write_MEM,alu_src, alu_src_EX,reg_write,reg_write_EX,reg_write_MEM_REAL,reg_write_MEM,reg_write_WB, jump,jump_EX,jump_MEM;
-wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB, pipeline_en;
+wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB, pipeline_en, regfile_waddr_EX_REAL,regfile_waddr_ID;
 wire [      31:0] regfile_wdata_WB, dram_data,dram_data_WB,alu_out,alu_out_MEM,alu_out_WB,
                   regfile_data_1,regfile_data_1_EX,regfile_data_2,regfile_data_2_EX,regfile_data_2_MEM,
                   alu_operand_2, forwarding_rs_out, forwarding_rt_out;
@@ -291,7 +291,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
 .en (enable_ID_EX),
-.din (mem_2_reg),
+.din (mem_2_reg && !stalling),
 .dout (mem_2_reg_EX )
 );
 
@@ -299,7 +299,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) mem_2_reg_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
 .en (enable_EX_MEM),
-.din (mem_2_reg_EX && !stalling),
+.din (mem_2_reg_EX),
 .dout (mem_2_reg_MEM)
 );
 
@@ -355,7 +355,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
 .en (enable_ID_EX),
-.din (reg_write),
+.din (reg_write && !stalling),
 .dout (reg_write_EX )
 );
 
@@ -363,7 +363,7 @@ reg_arstn_en#(.DATA_W(1), .PRESET_VAL('b0)) reg_write_EX_MEM(
 .clk (clk),
 .arst_n (arst_n),
 .en (enable_EX_MEM),
-.din (reg_write_EX && !stalling),
+.din (reg_write_EX),
 .dout (reg_write_MEM)
 );
 
@@ -422,9 +422,19 @@ reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_ID_EX(
 .clk (clk),
 .arst_n (arst_n),
 .en (enable_ID_EX),
-.din (regfile_waddr),
+.din (regfile_waddr_ID),
 .dout (regfile_waddr_EX)
 );
+
+mux_2 #(
+   .DATA_W(5)
+) regfile_waddr_nop (
+   .input_a (5'b11111),
+   .input_b (regfile_waddr),
+   .select_a(stalling),
+   .mux_out (regfile_waddr_ID)
+);
+
 
 
 reg_arstn_en#(.DATA_W(5), .PRESET_VAL('b0)) regfile_waddr_EX_MEM(
@@ -624,15 +634,15 @@ mux_3 #(
 forwarding_unit #(
 )forwarding_unit (
    .clk (clk),
-   .rs_EX (instruction_EX[25:21]),
-   .rt_EX (instruction_EX[20:16]),
-   .regfile_waddr_WB	(regfile_waddr_WB),
-   .regfile_waddr_MEM 	(regfile_waddr_MEM),   
-   .reg_write_MEM 	(reg_write_MEM),
-   .reg_write_WB 	(reg_write_WB),
-   .mem_2_reg_MEM	(mem_2_reg_MEM),
-   .mem_2_reg_WB	(mem_2_reg_WB),
-   .reg_dst_EX  	(reg_dst_EX),
+   .rs_EX (instruction_ID[25:21]),
+   .rt_EX (instruction_ID[20:16]),
+   .regfile_waddr_WB	(regfile_waddr_MEM),
+   .regfile_waddr_MEM 	(regfile_waddr_EX),   
+   .reg_write_MEM 	(reg_write_EX),
+   .reg_write_WB 	(reg_write_MEM),
+   .mem_2_reg_MEM	(mem_2_reg_EX),
+   .mem_2_reg_WB	(mem_2_reg_MEM),
+   .reg_dst_EX  	(reg_dst),
    .enable		(enable),
    .pipeline_en (pipeline_en),
    .forwarding_rs(forwarding_rs),

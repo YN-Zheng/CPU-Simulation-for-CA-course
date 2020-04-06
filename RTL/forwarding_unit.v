@@ -129,7 +129,7 @@ module forwarding_unit#() (
 	}
 	*/
 	
-always@(*)begin
+always@(posedge clk)begin
 
    if(reg_write_WB==1 && rs_EX==regfile_waddr_WB)begin
       forwarding_rs = 2'b01;
@@ -156,7 +156,7 @@ always@(*)begin
 end
 
 
-always@(*) begin
+always@(negedge clk) begin
    if(enable == 0) begin
       pipeline_en = 5'b00000;
       stalling = 1'b0;
