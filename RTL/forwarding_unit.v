@@ -156,7 +156,7 @@ always@(posedge clk)begin
 end
 
 
-always@(negedge clk) begin
+always@(*) begin
    if(enable == 0) begin
       pipeline_en = 5'b00000;
       stalling = 1'b0;

@@ -36,7 +36,7 @@ module register_file#(
    integer idx;
 
 
-   always@(negedge clk) begin
+   always@(*) begin
          rdata_1 = reg_array[raddr_1];
          rdata_2 = reg_array[raddr_2];
    end
