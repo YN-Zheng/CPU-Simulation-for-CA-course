@@ -47,7 +47,7 @@ wire              reg_dst,reg_dst_EX,branch,branch_EX,branch_MEM,mem_read,mem_re
 wire [       4:0] regfile_waddr,regfile_waddr_EX,regfile_waddr_MEM,regfile_waddr_WB, pipeline_en, regfile_waddr_EX_REAL,regfile_waddr_ID;
 wire [      31:0] regfile_wdata_WB, dram_data,dram_data_WB,alu_out,alu_out_MEM,alu_out_WB,
                   regfile_data_1,regfile_data_1_EX,regfile_data_2,regfile_data_2_EX,regfile_data_2_MEM,
-                  alu_operand_2, forwarding_rs_out, forwarding_rt_out;
+                  alu_operand_2, forwarding_rs_out, forwarding_rt_out,regfile_data_1_REAL,regfile_data_2_REAL;
 /*
 wire [	    15:0] instruction1;
 wire [       5:0] instruction2, instruction3;
@@ -466,9 +466,13 @@ register_file #(
    //.raddr_2  (instruction5_ID),
    .waddr    (regfile_waddr_WB  ),
    .wdata    (regfile_wdata_WB     ),
-   .rdata_1  (regfile_data_1    ),  
-   .rdata_2  (regfile_data_2    )
+   .rdata_1  (regfile_data_1_REAL    ),  
+   .rdata_2  (regfile_data_2_REAL    )
 );
+
+assign regfile_data_1 = (regfile_waddr_WB == instruction_ID[25:21])?regfile_wdata_WB:regfile_data_1_REAL;
+assign regfile_data_2 = (regfile_waddr_WB == instruction_ID[20:16])?regfile_wdata_WB:regfile_data_2_REAL;
+
 
 //pipeline register outputs
 reg_arstn_en#(.DATA_W(32), .PRESET_VAL('b0)) regfile_data_1_pipe_ID_EX(
@@ -636,8 +640,8 @@ forwarding_unit #(
    .clk (clk),
    .rs_EX (instruction_ID[25:21]),
    .rt_EX (instruction_ID[20:16]),
-   .regfile_waddr_WB	(regfile_waddr_MEM),
    .regfile_waddr_MEM 	(regfile_waddr_EX),   
+   .regfile_waddr_WB	(regfile_waddr_MEM),
    .reg_write_MEM 	(reg_write_EX),
    .reg_write_WB 	(reg_write_MEM),
    .mem_2_reg_MEM	(mem_2_reg_EX),
