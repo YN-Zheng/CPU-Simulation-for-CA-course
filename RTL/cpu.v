@@ -470,8 +470,8 @@ register_file #(
    .rdata_2  (regfile_data_2_REAL    )
 );
 
-assign regfile_data_1 = (regfile_waddr_WB == instruction_ID[25:21])?regfile_wdata_WB:regfile_data_1_REAL;
-assign regfile_data_2 = (regfile_waddr_WB == instruction_ID[20:16])?regfile_wdata_WB:regfile_data_2_REAL;
+assign regfile_data_1 = (regfile_waddr_WB == instruction_ID[25:21] && reg_write_WB)?regfile_wdata_WB:regfile_data_1_REAL;
+assign regfile_data_2 = (regfile_waddr_WB == instruction_ID[20:16] && reg_write_WB)?regfile_wdata_WB:regfile_data_2_REAL;
 
 
 //pipeline register outputs
